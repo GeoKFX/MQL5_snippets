@@ -38,28 +38,6 @@ if(time[0] != lastBarTime) {
     lastBarTime = time[0];
 }
 m_tickAccumulator += 1.0;
----
-
----
-
-## [CORE_EXECUTION_STATE]
-
-This section handles the translation of Pine's vectorized execution into MQL5's event-driven state machine.
-
-* **Rule 1.1 (var/varip):** Replicate persistence using `static` variables. `var` requires a `prev_calculated == 0` guard. `varip` requires manual "New Bar" detection to manage intrabar state.
-
-```cpp
-// Rule 1.1 Implementation
-static double m_historicalVar; // var equivalent
-if(prev_calculated == 0) m_historicalVar = 0.0;
-
-static datetime lastBarTime = 0;
-static double m_tickAccumulator = 0; // varip equivalent
-if(time[0] != lastBarTime) {
-    m_tickAccumulator = 0.0; 
-    lastBarTime = time[0];
-}
-m_tickAccumulator += 1.0;
 ```
 
 * **Rule 1.2 (Looping):** Implement incremental loops: `int start = (prev_calculated > 0) ? prev_calculated - 1 : 0`. Re-evaluating the current bar is mandatory for recursive integrity.
