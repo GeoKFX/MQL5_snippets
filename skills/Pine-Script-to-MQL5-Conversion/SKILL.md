@@ -1,102 +1,79 @@
+[SKILL] Pine Script to MQL5 Conversion
 
-Pine Script v5/v6 to MQL5 Conversion Skill
+name: PineScript-to-MQL5-Architect
+description: Expert system for deterministic conversion of Pine Script v5/v6 to MQL5 with zero-repainting guarantees.
+allowed-tools: [google_search, mql5_hot_base, canvas_artifacts]
 
-[TOC] Table of Contents
+TABLE OF CONTENTS
 
-[SECTION_SUMMARY] The Golden Standard (Architectural Baseline)
+CORE_EXECUTION_STATE
 
-[SECTION_STATE] Persistent State & Variable Emulation
+DATA_STRUCTURE_MAPPING
 
-[SECTION_MTF] Multi-Timeframe (MTF) & Security
+MTF_SECURITY_ALIGNMENT
 
-[SECTION_EXECUTION] Strategy to EA Execution Gating
+STRATEGY_EA_PARITY
 
-[SECTION_DATA] Data Structures & Collections Mapping
+SILENT_TRAPS_CHECKLIST
 
-[SECTION_TRAPS] Silent Failures Checklist
+REFERENCE_DOCUMENTATION
 
-[SECTION_RESOURCES] Links to Specialized References
+## [CORE_EXECUTION_STATE]
 
-[SECTION_SUMMARY] The Golden Standard
+This section handles the translation of Pine's vectorized execution into MQL5's event-driven state machine.
 
-Для обеспечения 100% идентичности исполнения (Execution Parity) и отсутствия перерисовки (Non-Repainting), придерживайтесь следующих правил:
+Rule 1.1 (var/varip): Replicate persistence using static variables. var requires a prev_calculated == 0 guard. varip requires manual "New Bar" detection to manage intrabar state.
 
-Deterministic State: Используйте static переменные внутри OnCalculate с защитой инициализации prev_calculated == 0.
+Rule 1.2 (Looping): Implement incremental loops: int start = (prev_calculated > 0) ? prev_calculated - 1 : 0. Re-evaluating the current bar is mandatory for recursive integrity.
 
-Incremental Calculation: Всегда пересчитывайте только последний бар: int start = (prev_calculated > 0) ? prev_calculated - 1 : 0.
+Rule 1.3 (Indexing): Enforce ArraySetAsSeries(true) to align MQL5 with Pine’s reverse-chronological indexing [0].
 
-Array Direction: Принудительно устанавливайте ArraySetAsSeries(buffer, true) для всех ценовых массивов.
+## [DATA_STRUCTURE_MAPPING]
 
-MTF Security: Используйте правило Shift + 1 для HTF-данных, чтобы исключить утечки из будущего (Future Leaks).
+Mapping functional Pine v6 structures to Object-Oriented MQL5.
 
-ECN Trade: Открывайте позицию без SL/TP, затем модифицируйте тикет (Protocol: Request -> Ticket -> Modify).
+Rule 2.1 (UDTs): Convert Pine type definitions to MQL5 class structures. Classes support methods and dynamic memory via CArrayObj.
 
-[SECTION_STATE] Persistent State & Variable Emulation
+Rule 2.2 (Collections): * Pine Map → CHashMap<K, V>.
 
-Замена функциональной модели Pine на императивную модель MQL5.
+Pine Matrix → Flattened 1D array with IDX(r, c) macro access.
 
-var (Historical): static + guard. Переменная сохраняет значение между барами.
+Pine Array → CArrayDouble or native dynamic arrays.
 
-varip (Intrabar): static + New Bar Detection. Значение обновляется каждый тик внутри бара.
+## [MTF_SECURITY_ALIGNMENT]
 
-Details: See references/State_Persistence.md for pattern implementations.
+Deterministic time alignment for request.security without future-leaks.
 
-[SECTION_MTF] Multi-Timeframe (MTF) & Security
+Rule 3.1 (Shift + 1 Rule): Use iBarShift to align LTF time to HTF index. Always access [shift + 1] for closed-bar data (lookahead_off parity).
 
-Критическая секция для предотвращения Repainting.
+Rule 3.2 (Sync Guard): Always validate iBarShift return values (!= -1) before data access.
 
-Logic: Синхронизация через iBarShift.
+## [STRATEGY_EA_PARITY]
 
-Security: Если LTF-бар еще не закрыт, мы НЕ имеем права брать данные HTF-бара с индексом [0].
+Ensuring Pine backtest results match MQL5 Live Execution.
 
-Grep Pattern: HTF_Buffer[shift + 1]
+Rule 4.1 (Execution Gating): Use an IsNewBar() filter in OnTick() to mimic Pine's bar-close evaluation model.
 
-Details: See references/MTF_Sync.md for synchronization logic.
+Rule 4.2 (ECN Protocol): Follow the "Open-then-Modify" sequence: trade.Buy() -> ResultOrder() -> trade.PositionModify().
 
-[SECTION_EXECUTION] Strategy to EA Execution Gating
+Rule 4.3 (Pyramiding): Manually track position counts using PositionsTotal() filtered by Magic Number and Symbol.
 
-Перевод Pine Strategies в торговых советников (EA).
+## [SILENT_TRAPS_CHECKLIST]
 
-Timing: Pine исполняет ордер на Open следующего бара после сигнала.
+Critical checks to prevent logic corruption.
 
-MQL5 implementation: Используйте фильтр New Bar в OnTick, чтобы симулировать закрытие свечи.
+[TRAP_1] Floating Point Drift: Normalize all prices to _Digits.
 
-Order Protocol: Использование класса CTrade из стандартной библиотеки.
+[TRAP_2] Recursive Drift: Ensure incremental calculation for EMA/RMA.
 
-Details: See references/Execution_Mapping.md for order mapping rules.
+[TRAP_3] Implicit NaN: Use MathIsValidNumber() to mimic Pine's na propagation.
 
-[SECTION_DATA] Data Structures & Collections Mapping
+[TRAP_4] Array Direction Consistency: Mixing series and non-series indices leads to signal inversion.
 
-Перенос сложных типов данных из Pine v6.
+[TRAP_5] Integer Division: Pine 5/2 = 2.5, MQL5 5/2 = 2. Use explicit casting (double)x/y.
 
-UDT -> Class: Пользовательские типы маппятся в классы для поддержки инкапсуляции.
+## [REFERENCE_DOCUMENTATION]
 
-Map -> CHashMap: Использование #include <Generic\HashMap.mqh>.
+For detailed implementation patterns and ready-to-use code snippets, refer to:
 
-Matrix -> Flat Array: Эмуляция через одномерный массив с макросом IDX(r,c).
-
-Details: See references/Data_Collections.md for OOP patterns.
-
-[SECTION_TRAPS] Silent Failures Checklist
-
-Чек-лист перед компиляцией:
-
-[ ] Все ли массивы проинициализированы ArraySetAsSeries?
-
-[ ] Используется ли NormalizeDouble(price, _Digits) перед OrderSend?
-
-[ ] Нет ли рекурсивных вызовов в циклах (O(N^2))?
-
-[ ] Обработан ли na через MathIsValidNumber?
-
-[SECTION_RESOURCES] Links to Specialized References
-
-State Persistence Patterns
-
-MTF Synchronization & Non-Repainting
-
-Execution Engine & Trade Protocols
-
-Data Structures & Matrices
-
-Created by MQL5 AI-assisted Coding agent | Ref: ThomasPraun/mql-developer Standards
+Snippets Library: A comprehensive collection of MQL5 code fragments for state persistence, MTF handling, and ECN-compatible trading.
