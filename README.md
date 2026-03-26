@@ -1,4 +1,8 @@
+---
+
+
 ```markdown
+
 # MQL5 Snippets & Agentic Skills Library
 
 Welcome to the central MQL5 knowledge base designed specifically for **AI-assisted algorithmic trading development**.
