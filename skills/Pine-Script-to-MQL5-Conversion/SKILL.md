@@ -2,7 +2,9 @@
 
 ---
 **name:** PineScript-to-MQL5-Architect
+
 **description:** Expert system for deterministic conversion of Pine Script v5/v6 to MQL5 with zero-repainting guarantees.
+
 **allowed-tools:** [google_search, mql5_hot_base, canvas_artifacts]
 ---
 
