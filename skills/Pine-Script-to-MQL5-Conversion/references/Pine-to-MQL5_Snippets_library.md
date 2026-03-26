@@ -1,6 +1,5 @@
-
-
 ```markdown
+
 # Reference: Pine to MQL5 Snippets Library (Full Parity Edition)
 
 This library provides production-ready, high-performance code snippets for every rule, mapping, and trap defined in the [Pine Script to MQL5 Conversion guide](https://github.com/GeoKFX/MQL5_Snippets_and_Skills/blob/main/skills/Pine-Script-to-MQL5-Conversion/SKILL.md). It is designed to ensure 1:1 logical parity between Pine Script v5/v6 and MQL5.
