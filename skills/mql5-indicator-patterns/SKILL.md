@@ -1,6 +1,7 @@
 ---
 name: mql5-indicator-patterns
-description: MQL5 indicator development patterns. TRIGGERS - MQL5 indicator, OnCalculate, indicator buffers, MetaTrader 5.
+description: MQL5 indicator development patterns. 
+TRIGGERS - MQL5 indicator, OnCalculate, indicator buffers, MetaTrader 5.
 allowed-tools: Read, Grep, Edit, Write
 ---
 
