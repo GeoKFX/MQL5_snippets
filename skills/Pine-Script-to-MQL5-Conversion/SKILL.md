@@ -2,23 +2,42 @@
 
 # [SKILL] Pine Script to MQL5 Conversion
 
----
-**name** : PineScript-to-MQL5-Architect
-**description** : Expert system for deterministic conversion of Pine Script v5/v6 to MQL5 with zero-repainting guarantees.
-**triggers** : - Convert, Pine, Pine script, PineScript, TV, Trading view, MQL5 indicator, OnCalculate, indicator buffers, MT5.
-**allowed-tools** : Google_search, Read, Grep, Edit, Write
----
-
+| | |
+| :--- | :--- |
+| **name** | PineScript-to-MQL5-Architect |
+| **description** | Expert system for deterministic conversion of Pine Script v5/v6 to MQL5 with zero-repainting guarantees. |
+| **triggers** | Convert, Pine, Pine script, PineScript, TV, Trading view, MQL5 indicator, OnCalculate, indicator buffers, MT5. |
+| **allowed-tools** | Google_search, Read, Grep, Edit, Write |
 
 ## TABLE OF CONTENTS
 
-1. [CORE_EXECUTION_STATE](https://github.com/GeoKFX/MQL5_Snippets_and_Skills/blob/main/skills/Pine-Script-to-MQL5-Conversion/SKILL.md#-core_execution_state)
-2. [DATA_STRUCTURE_MAPPING](https://github.com/GeoKFX/MQL5_Snippets_and_Skills/blob/main/skills/Pine-Script-to-MQL5-Conversion/SKILL.md#-data_structure_mapping)
-3. [MTF_SECURITY_ALIGNMENT](https://github.com/GeoKFX/MQL5_Snippets_and_Skills/blob/main/skills/Pine-Script-to-MQL5-Conversion/SKILL.md#-mtf_security_alignment)
-4. [STRATEGY_EA_PARITY](https://github.com/GeoKFX/MQL5_Snippets_and_Skills/blob/main/skills/Pine-Script-to-MQL5-Conversion/SKILL.md#-strategy_ea_parity)
-5. [SILENT_TRAPS_CHECKLIST](https://github.com/GeoKFX/MQL5_Snippets_and_Skills/blob/main/skills/Pine-Script-to-MQL5-Conversion/SKILL.md#-silent_traps_checklist)
-6. [REFERENCE_DOCUMENTATION](https://github.com/GeoKFX/MQL5_Snippets_and_Skills/blob/main/skills/Pine-Script-to-MQL5-Conversion/SKILL.md#-reference_documentation)
+1. [CORE_EXECUTION_STATE](#core_execution_state)
+2. [DATA_STRUCTURE_MAPPING](#data_structure_mapping)
+3. [MTF_SECURITY_ALIGNMENT](#mtf_security_alignment)
+4. [STRATEGY_EA_PARITY](#strategy_ea_parity)
+5. [SILENT_TRAPS_CHECKLIST](#silent_traps_checklist)
+6. [REFERENCE_DOCUMENTATION](#reference_documentation)
 
+---
+
+## CORE_EXECUTION_STATE
+
+This section handles the translation of Pine's vectorized execution into MQL5's event-driven state machine.
+
+* **Rule 1.1 (var/varip):** Replicate persistence using `static` variables. `var` requires a `prev_calculated == 0` guard. `varip` requires manual "New Bar" detection to manage intrabar state.
+
+```cpp
+// Rule 1.1 Implementation
+static double m_historicalVar; // var equivalent
+if(prev_calculated == 0) m_historicalVar = 0.0;
+
+static datetime lastBarTime = 0;
+static double m_tickAccumulator = 0; // varip equivalent
+if(time[0] != lastBarTime) {
+    m_tickAccumulator = 0.0; 
+    lastBarTime = time[0];
+}
+m_tickAccumulator += 1.0;
 ---
 
 ---
