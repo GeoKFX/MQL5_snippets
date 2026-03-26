@@ -1,4 +1,4 @@
-# База сниппетов: -MQL5 Snippets (12)
+# MQL5 Snippets (12)
 
 ### OnStart
 ```mql5
